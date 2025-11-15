@@ -1,23 +1,39 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+import re
 
 app = FastAPI()
 
-class TextRequest(BaseModel):
+class InputText(BaseModel):
     text: str
 
-@app.post("/analyze")
-def analyze_text(req: TextRequest):
-    text = req.text
+# Simple regex detections for now
+def detect_entities(text):
     entities = []
 
-    if "@" in text:
-        entities.append("EMAIL")
+    email_pattern = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+    phone_pattern = r"\b[6-9]\d{9}\b"
+    aadhaar_pattern = r"\b\d{4}\s?\d{4}\s?\d{4}\b"
+    pan_pattern = r"\b[A-Z]{5}[0-9]{4}[A-Z]\b"
 
-    sanitized = text.replace("@", "[at]")
+    if re.search(email_pattern, text):
+        entities.append("EMAIL")
+    if re.search(phone_pattern, text):
+        entities.append("PHONE")
+    if re.search(aadhaar_pattern, text):
+        entities.append("AADHAAR")
+    if re.search(pan_pattern, text):
+        entities.append("PAN")
+
+    return entities
+
+@app.post("/analyze")
+def analyze_text(input: InputText):
+    text = input.text
+    entities = detect_entities(text)
 
     return {
-        "sanitized_text": sanitized,
         "entities": entities,
-        "confidence": 0.97
+        "count": len(entities),
+        "sanitized_text": text
     }

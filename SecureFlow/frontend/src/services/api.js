@@ -4,14 +4,31 @@ const BASE_URL = "http://127.0.0.1:5000/api";
 const PRIVACY_URL = `${BASE_URL}/privacy`;
 
 // =============================
+// 🔐 Helper: Get Auth Headers
+// =============================
+function authHeaders(json = true) {
+  const token = localStorage.getItem("token");
+  return json
+    ? {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      }
+    : {
+        Authorization: `Bearer ${token}`,
+      };
+}
+
+// =============================
 // ✅ AUTHENTICATION
 // =============================
 export async function registerOrLogin(username, password, isRegister = false) {
   const mode = isRegister ? "register" : "login";
+
   try {
     const res = await fetch(`${BASE_URL}/auth/${mode}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders(true),
       body: JSON.stringify({ username, password }),
     });
 
@@ -37,9 +54,7 @@ export async function registerOrLogin(username, password, isRegister = false) {
 export async function fetchDecryptedLog(logId) {
   try {
     const response = await fetch(`${PRIVACY_URL}/log/${logId}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
+      headers: authHeaders(false),
     });
 
     if (!response.ok) throw new Error("Failed to fetch decrypted log");
@@ -57,14 +72,11 @@ export async function analyzeText(text) {
   try {
     const response = await fetch(`${PRIVACY_URL}/analyze`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
+      headers: authHeaders(true),
       body: JSON.stringify({ text }),
     });
 
-    if (!response.ok) throw new Error("Network response was not ok");
+    if (!response.ok) throw new Error("Analyze request failed");
     return await response.json();
   } catch (error) {
     console.error("❌ Error analyzing text:", error);
@@ -78,7 +90,7 @@ export async function analyzeText(text) {
 export async function fetchLogs() {
   try {
     const response = await fetch(`${PRIVACY_URL}/logs`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      headers: authHeaders(false),
     });
 
     if (!response.ok) throw new Error("Failed to fetch logs");
@@ -99,9 +111,7 @@ export async function uploadFile(file) {
   try {
     const response = await fetch(`${PRIVACY_URL}/upload`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
+      headers: authHeaders(false), // ❗ No JSON header here
       body: formData,
     });
 
