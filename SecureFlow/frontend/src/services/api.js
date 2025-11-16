@@ -1,11 +1,9 @@
 // src/services/api.js
 
-const BASE_URL = "http://127.0.0.1:5000/api";
+// Force backend URL to 5001 for local dev reliability
+const BASE_URL = "http://127.0.0.1:5001/api";
 const PRIVACY_URL = `${BASE_URL}/privacy`;
 
-// =============================
-// 🔐 Helper: Get Auth Headers
-// =============================
 function authHeaders(json = true) {
   const token = localStorage.getItem("token");
   return json
@@ -14,111 +12,69 @@ function authHeaders(json = true) {
         Accept: "application/json",
         Authorization: `Bearer ${token}`,
       }
-    : {
-        Authorization: `Bearer ${token}`,
-      };
+    : { Authorization: `Bearer ${token}` };
 }
 
-// =============================
-// ✅ AUTHENTICATION
-// =============================
+// === AUTH ===
 export async function registerOrLogin(username, password, isRegister = false) {
   const mode = isRegister ? "register" : "login";
+  const res = await fetch(`${BASE_URL}/auth/${mode}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({ username, password }),
+  });
 
-  try {
-    const res = await fetch(`${BASE_URL}/auth/${mode}`, {
-      method: "POST",
-      headers: authHeaders(true),
-      body: JSON.stringify({ username, password }),
-    });
-
-    const data = await res.json();
-
-    if (data.token) {
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify({ username }));
-      return true;
-    } else {
-      console.error("❌ Auth failed:", data);
-      return false;
-    }
-  } catch (err) {
-    console.error("🚨 Auth request failed:", err);
-    return false;
+  const data = await res.json();
+  if (data.token) {
+    localStorage.setItem("token", data.token);
+    return true;
   }
+  return false;
 }
 
-// =============================
-// ✅ DECRYPTED LOG FETCHER
-// =============================
-export async function fetchDecryptedLog(logId) {
-  try {
-    const response = await fetch(`${PRIVACY_URL}/log/${logId}`, {
-      headers: authHeaders(false),
-    });
-
-    if (!response.ok) throw new Error("Failed to fetch decrypted log");
-    return await response.json();
-  } catch (error) {
-    console.error("❌ Error fetching decrypted log:", error);
-    return { error: "Failed to fetch decrypted log" };
-  }
-}
-
-// =============================
-// ✅ PRIVACY ANALYZER (Text Mode)
-// =============================
+// === TEXT ANALYSIS ===
 export async function analyzeText(text) {
-  try {
-    const response = await fetch(`${PRIVACY_URL}/analyze`, {
-      method: "POST",
-      headers: authHeaders(true),
-      body: JSON.stringify({ text }),
-    });
+  const maskLevel = parseInt(localStorage.getItem("maskLevel"), 10) || 100;
+  const response = await fetch(`${PRIVACY_URL}/analyze`, {
+    method: "POST",
+    headers: authHeaders(true),
+    body: JSON.stringify({ text, maskLevel }),
+  });
 
-    if (!response.ok) throw new Error("Analyze request failed");
-    return await response.json();
-  } catch (error) {
-    console.error("❌ Error analyzing text:", error);
-    return { ok: false, error: "Server error" };
-  }
+  return await response.json();
 }
 
-// =============================
-// ✅ FETCH LOGS (Audit History)
-// =============================
+// === LOGS ===
 export async function fetchLogs() {
-  try {
-    const response = await fetch(`${PRIVACY_URL}/logs`, {
-      headers: authHeaders(false),
-    });
-
-    if (!response.ok) throw new Error("Failed to fetch logs");
-    return await response.json();
-  } catch (error) {
-    console.error("❌ Error fetching logs:", error);
-    return [];
-  }
+  const response = await fetch(`${PRIVACY_URL}/logs`, {
+    headers: authHeaders(false),
+  });
+  return await response.json();
 }
 
-// =============================
-// ✅ FILE UPLOAD (PDF / IMAGE)
-// =============================
+// === FILE UPLOAD ===
 export async function uploadFile(file) {
   const formData = new FormData();
   formData.append("file", file);
+  const maskLevel = parseInt(localStorage.getItem("maskLevel"), 10) || 100;
+  formData.append("maskLevel", String(maskLevel));
 
-  try {
-    const response = await fetch(`${PRIVACY_URL}/upload`, {
-      method: "POST",
-      headers: authHeaders(false), // ❗ No JSON header here
-      body: formData,
-    });
+  const response = await fetch(`${PRIVACY_URL}/upload`, {
+    method: "POST",
+    headers: authHeaders(false),
+    body: formData,
+  });
 
-    if (!response.ok) throw new Error("Upload failed");
-    return await response.json();
-  } catch (error) {
-    console.error("❌ Error uploading file:", error);
-    return { error: "Upload failed" };
-  }
+  return await response.json();
+}
+
+// === USER STATS ===
+export async function fetchStats() {
+  const response = await fetch(`${PRIVACY_URL}/stats`, {
+    headers: authHeaders(false),
+  });
+  return await response.json();
 }

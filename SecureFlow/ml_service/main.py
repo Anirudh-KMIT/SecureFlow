@@ -7,14 +7,14 @@ app = FastAPI()
 class InputText(BaseModel):
     text: str
 
-# Simple regex detections for now
 def detect_entities(text):
     entities = []
 
     email_pattern = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
-    phone_pattern = r"\b[6-9]\d{9}\b"
+    phone_pattern = r"\b\d{10}\b"  # Detect any 10-digit phone number
     aadhaar_pattern = r"\b\d{4}\s?\d{4}\s?\d{4}\b"
     pan_pattern = r"\b[A-Z]{5}[0-9]{4}[A-Z]\b"
+    password_pattern = r"(password\s*[:=]\s*\S+)"
 
     if re.search(email_pattern, text):
         entities.append("EMAIL")
@@ -24,6 +24,8 @@ def detect_entities(text):
         entities.append("AADHAAR")
     if re.search(pan_pattern, text):
         entities.append("PAN")
+    if re.search(password_pattern, text, re.IGNORECASE):
+        entities.append("PASSWORD")
 
     return entities
 

@@ -1,53 +1,88 @@
-// ========= LOAD ENV FIRST =========
+// ===============================
+// 🌐 Load Environment First
+// ===============================
 import dotenv from "dotenv";
 dotenv.config();
 
-// ========= IMPORTS AFTER ENV LOADED =========
+// ===============================
+// 📦 Imports
+// ===============================
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import fileUpload from "express-fileupload";
 
+// Route files
 import authRoutes from "./routes/authRoutes.js";
 import privacyRoutes from "./routes/privacyRoutes.js";
 
-// ========= EXPRESS APP =========
+// ===============================
+// 🚀 Initialize App
+// ===============================
 const app = express();
 
-// ========= MIDDLEWARE (VERY IMPORTANT ORDER) =========
-
-// Allow JSON + form data BEFORE fileUpload modifies body
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-
-// Correct fileUpload config to prevent wiping req.body
+// ===============================
+// 🛡 Global Middleware
+// ===============================
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+];
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true); // allow non-browser or curl
+      if (allowedOrigins.includes(origin)) return cb(null, true);
+      return cb(null, true); // permissive for local dev
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Accept",
+      "X-Requested-With",
+    ],
+    credentials: false,
+    maxAge: 86400,
+  })
+);
+app.options("*", cors());
+app.use(express.json({ limit: "10mb" }));
 app.use(
   fileUpload({
     useTempFiles: true,
-    parseNested: true, // <-- CRITICAL FIX
-    preserveExtension: true,
+    tempFileDir: "/tmp/",
   })
 );
 
-// CORS
-app.use(cors());
-
-// Debug: Check if JWT_SECRET is loading
-console.log("Loaded JWT_SECRET:", process.env.JWT_SECRET);
-
-// ========= MONGODB =========
+// ===============================
+// 🗄 MongoDB Connection
+// ===============================
 mongoose
-  .connect(process.env.MONGODB_URI)
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ MongoDB error:", err));
+  .catch((err) => console.error("❌ MongoDB connection error:", err.message));
 
-// ========= ROUTES =========
-app.use("/api/auth", authRoutes);
-app.use("/api/privacy", privacyRoutes);
+// ===============================
+// 🛣 Register Routes
+// ===============================
+app.use("/api/auth", authRoutes);       // Login + Register
+app.use("/api/privacy", privacyRoutes); // Analyzer + PDF + Logs
 
-// ========= DEFAULT =========
-app.get("/", (req, res) => res.send("SecureFlow API running 🚀"));
+// ===============================
+// 🏠 Default Route
+// ===============================
+app.get("/", (req, res) => {
+  res.send("SecureFlow API is running 🚀 (Backend OK)");
+});
 
-// ========= SERVER =========
+// ===============================
+// 🟢 Start Server
+// ===============================
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () =>
+  console.log(`🚀 Server running on http://127.0.0.1:${PORT}`)
+);

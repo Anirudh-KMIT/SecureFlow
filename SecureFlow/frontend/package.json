@@ -20,10 +20,11 @@
     "framer-motion": "^12.23.24",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.553.0",
-    "pdf-parse": "^2.4.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.9.5"
+    "react-router-dom": "^7.9.5",
+    "tesseract.js": "^6.0.1",
+    "pdfjs-dist": "^4.4.168"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",

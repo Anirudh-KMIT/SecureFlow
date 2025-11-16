@@ -22,22 +22,31 @@ export default function NeonParticles() {
         particles.push({
           x: random(0, canvas.width),
           y: random(0, canvas.height),
-          size: random(1, 3),
-          speedX: random(-0.5, 0.5),
-          speedY: random(-0.5, 0.5),
-          color: `hsl(${random(250, 290)}, 80%, 70%)`,
+          size: random(2.0, 4.0),
+          speedX: random(-0.6, 0.6),
+          speedY: random(-0.6, 0.6),
+          color: `hsl(${random(250, 320)}, 90%, 60%)`, // glow color
         });
       }
     };
 
     const drawParticles = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.globalCompositeOperation = "lighter"; // additive glow
       particles.forEach((p) => {
+        // Outer colored glow
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = p.color;
+        ctx.fillStyle = "rgba(255,255,255,0.9)"; // white core
+        ctx.shadowBlur = 38;
+        ctx.shadowColor = p.color; // neon glow color
+        ctx.fill();
+
+        // Small specular highlight for extra whiteness
+        ctx.beginPath();
+        ctx.arc(p.x - p.size * 0.2, p.y - p.size * 0.2, p.size * 0.4, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+        ctx.shadowBlur = 0;
         ctx.fill();
         p.x += p.speedX;
         p.y += p.speedY;
@@ -67,7 +76,8 @@ export default function NeonParticles() {
     window.addEventListener("mousemove", handleMouseMove);
 
     resize();
-    createParticles(60);
+    const dynamicCount = Math.min(160, Math.floor((window.innerWidth * window.innerHeight) / 15000));
+    createParticles(Math.max(80, dynamicCount));
     drawParticles();
 
     return () => {

@@ -6,10 +6,13 @@ import { useNavigate } from "react-router-dom";
 import PrivacyAnalyzer from "./components/PrivacyAnalyzer";
 import Dashboard from "./components/Dashboard";
 import Settings from "./components/Settings";
-import BackgroundEffects from "./components/BackgroundEffects"; // 🌌 neon particles
+import Profile from "./components/Profile";
+import NeonParticles from "./components/NeonParticles"; // 🌌 neon particles
+import { useEffect } from "react";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const navigate = useNavigate();
 
   const [user, setUser] = useState(
     localStorage.getItem("token")
@@ -17,36 +20,26 @@ export default function App() {
       : null
   );
 
-  // Not logged in
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#050010] text-white relative overflow-hidden">
-        <BackgroundEffects />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0a0018]/70 via-[#050010]/70 to-[#000006]/70 z-0"></div>
+  // Not logged in → send to /login (Welcome sits at /)
+  useEffect(() => {
+    if (!user) navigate("/login", { replace: true });
+  }, [user, navigate]);
+  if (!user) return null;
 
-        <div className="text-center z-10">
-          <h1 className="text-5xl font-bold text-purple-400 mb-4 tracking-wide">
-            SecureFlow
-          </h1>
-          <p className="text-gray-400 mb-8 text-lg">
-            Login to access contextual data privacy analysis
-          </p>
-          <button
-            onClick={() => (window.location.href = "/login")}
-            className="px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition shadow-md shadow-purple-900/40"
-          >
-            Go to Login
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const toDisplayName = (s) => {
+    if (!s) return "";
+    return String(s)
+      .split(/[\s._-]+/)
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+  };
 
   // Logged in
   return (
     <div className="min-h-screen text-gray-100 bg-[#050010] relative overflow-hidden">
       {/* 🌌 Neon particles */}
-      <BackgroundEffects />
+      <NeonParticles />
 
       {/* Soft overlay gradient (on top of particles but behind content) */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#0a0018]/80 via-[#050010]/80 to-[#000006]/80 z-0"></div>
@@ -81,10 +74,20 @@ export default function App() {
           >
             Settings
           </button>
+          <button
+            className={`px-4 py-2 rounded-lg text-sm transition ${
+              activeTab === "profile"
+                ? "bg-purple-700 shadow-md shadow-purple-900/40"
+                : "bg-purple-900/40 hover:bg-purple-700"
+            }`}
+            onClick={() => setActiveTab("profile")}
+          >
+            Profile
+          </button>
           <span className="text-sm text-gray-300">
             👋 Welcome,{" "}
             <span className="text-purple-400 font-semibold">
-              {user.username}
+              {toDisplayName(user.username)}
             </span>
           </span>
           <button
@@ -113,6 +116,7 @@ export default function App() {
           </div>
         )}
         {activeTab === "settings" && <Settings />}
+        {activeTab === "profile" && <Profile />}
       </motion.main>
 
       {/* Footer */}

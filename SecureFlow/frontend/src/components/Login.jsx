@@ -16,8 +16,8 @@ export default function Login() {
     setLoading(false);
 
     if (success) {
-      // ✅ Store user token handled in API, now reload App
-      window.location.href = "/";
+      // ✅ Store user token handled in API, go to app
+      window.location.href = "/app";
     } else {
       alert("Authentication failed. Please check your credentials.");
     }

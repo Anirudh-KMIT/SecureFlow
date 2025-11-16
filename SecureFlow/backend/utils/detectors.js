@@ -67,7 +67,7 @@ const DOB = {
 // We'll treat names with caution (mark low confidence) unless ML confirms.
 const NAME_HEURISTIC = {
   name: "PERSON_NAME",
-  regex: /\b([A-Z][a-z]{1,}\s(?:[A-Z][a-z]{1,}\s?){0,2})\b/g,
+  regex: /\b([A-Z][a-z]{1,}\s(?:[A-Z][a-z]{1,}\s?){0,2})\b/gi,
 };
 
 // Utility: Luhn check for credit card numbers
