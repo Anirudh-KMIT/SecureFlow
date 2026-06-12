@@ -3,7 +3,7 @@
 const rawBaseUrl =
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_BACKEND_URL ||
-  "http://127.0.0.1:5000";
+  (typeof window !== "undefined" ? window.location.origin : "http://127.0.0.1:5000");
 const BASE_URL = rawBaseUrl.replace(/\/$/, "") + "/api";
 const PRIVACY_URL = `${BASE_URL}/privacy`;
 
