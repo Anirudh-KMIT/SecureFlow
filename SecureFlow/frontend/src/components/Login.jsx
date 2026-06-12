@@ -12,14 +12,14 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const success = await registerOrLogin(username, password, isRegister);
+    const result = await registerOrLogin(username, password, isRegister);
     setLoading(false);
 
-    if (success) {
+    if (result.ok) {
       // ✅ Store user token handled in API, go to app
       window.location.href = "/app";
     } else {
-      alert("Authentication failed. Please check your credentials.");
+      alert(result.message);
     }
   };
 

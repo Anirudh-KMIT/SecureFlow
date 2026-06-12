@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true, // ensures consistent usernames
     },
     password: { type: String, required: true },
+    passwordHash: { type: String },
   },
   { timestamps: true }
 );

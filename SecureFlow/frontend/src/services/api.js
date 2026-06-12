@@ -1,7 +1,10 @@
 // src/services/api.js
 
-// Force backend URL to 5001 for local dev reliability
-const BASE_URL = "http://127.0.0.1:5001/api";
+const rawBaseUrl =
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_BACKEND_URL ||
+  "http://127.0.0.1:5000";
+const BASE_URL = rawBaseUrl.replace(/\/$/, "") + "/api";
 const PRIVACY_URL = `${BASE_URL}/privacy`;
 
 function authHeaders(json = true) {
@@ -30,9 +33,9 @@ export async function registerOrLogin(username, password, isRegister = false) {
   const data = await res.json();
   if (data.token) {
     localStorage.setItem("token", data.token);
-    return true;
+    return { ok: true };
   }
-  return false;
+  return { ok: false, message: data.message || "Authentication failed. Please check your credentials." };
 }
 
 // === TEXT ANALYSIS ===
